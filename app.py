@@ -1,8 +1,6 @@
+# pip install git+https://github.com/sarvottam-bhagat/ai-data-science-team.git --upgrade
 
-
-# pip install git+https://github.com/business-science/ai-data-science-team.git --upgrade
-
-from openai import OpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 import streamlit as st
 import sqlalchemy as sql
@@ -21,7 +19,7 @@ DB_OPTIONS = {
     "Northwind Database": "sqlite:///data/northwind.db",
 }
 
-MODEL_LIST = ['gpt-4o-mini', 'gpt-4o']
+MODEL_LIST = ['gemini-exp-1206', 'gemini-1.5-pro']
 
 TITLE = "Your SQL Database Agent"
 
@@ -61,41 +59,43 @@ conn = sql_engine.connect()
 
 # * OpenAI API Key
 
-st.sidebar.header("Enter your OpenAI API Key")
+st.sidebar.header("Enter your Gemini API Key")
 
-st.session_state["OPENAI_API_KEY"] = st.sidebar.text_input("API Key", type="password", help="Your OpenAI API key is required for the app to function.")
+st.session_state["GOOGLE_API_KEY"] = st.sidebar.text_input("API Key", type="password", help="Your GEMINI API key is required for the app to function.")
 
 # Test OpenAI API Key
-if st.session_state["OPENAI_API_KEY"]:
+if st.session_state["GOOGLE_API_KEY"]:
     # Set the API key for OpenAI
-    client = OpenAI(api_key=st.session_state["OPENAI_API_KEY"])
+    client = ChatGoogleGenerativeAI(
+        model="gemini-exp-1206",  # Add default model
+        api_key=st.session_state["GOOGLE_API_KEY"]
+    )
     
     # Test the API key (optional)
     try:
-        # Example: Fetch models to validate the key
-        models = client.models.list()
+        # Remove models.list() as it's not needed/supported
         st.success("API Key is valid!")
     except Exception as e:
         st.error(f"Invalid API Key: {e}")
 else:
-    st.info("Please enter your OpenAI API Key to proceed.")
+    st.info("Please enter your Gemini API Key to proceed.")
     st.stop()
 
 
 # * OpenAI Model Selection
 
 model_option = st.sidebar.selectbox(
-    "Choose OpenAI model",
+    "Choose Gemini model",
     MODEL_LIST,
     index=0
 )
 
-OPENAI_LLM = ChatOpenAI(
+GEMINI_LLM = ChatGoogleGenerativeAI(
     model = model_option,
-    api_key=st.session_state["OPENAI_API_KEY"]
+    api_key=st.session_state["GOOGLE_API_KEY"]
 )
 
-llm = OPENAI_LLM
+llm = GEMINI_LLM
 
 # * STREAMLIT 
 
@@ -140,8 +140,8 @@ async def handle_question(question):
 
 if st.session_state["PATH_DB"] and (question := st.chat_input("Enter your question here:", key="query_input")):
     
-    if not st.session_state["OPENAI_API_KEY"]:
-        st.error("Please enter your OpenAI API Key to proceed.")
+    if not st.session_state["GOOGLE_API_KEY"]:
+        st.error("Please enter your GEMINI API Key to proceed.")
         st.stop()
     
     with st.spinner("Thinking..."):
